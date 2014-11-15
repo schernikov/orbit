@@ -116,8 +116,8 @@ function initTexture() {
     }
 
     moonTexture.image.src = 'images/earth.jpg';
-    //moonTexture.image.src = 'images/nightlights.png';
-    //moonTexture.image.src = 'images/moon.gif';
+    //moonTexture.image.src = 'images/night.jpg';
+    //moonTexture.image.src = 'images/moon.jpg';
 }
 
 
