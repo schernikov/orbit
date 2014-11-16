@@ -21,11 +21,15 @@
     uniform sampler2D uDaySampler;
     uniform sampler2D uNightSampler;
 
+    const float nightLevel = 0.1;     // at what light level night is fully in effect
+    const float dayLevel = 0.5;       // at what light level day is fully in effect
+    const float ambientLevel = 0.3;   // how much day texture should affect night zones
+
     void main(void) {
         vec4 textureColor = texture2D(uDaySampler, vec2(vTextureCoord.s, vTextureCoord.t));
         vec4 day = vec4(textureColor.rgb * vLightWeighting, textureColor.a);
         vec4 night = texture2D(uNightSampler, vec2(vTextureCoord.s, vTextureCoord.t));
-        gl_FragColor = mix(night, day, clamp(vDirectionalLightWeighting, 0.3, 1.0));
+        gl_FragColor = mix(night, day, clamp((vDirectionalLightWeighting-nightLevel)/(dayLevel-nightLevel), ambientLevel, 1.0));
     }
     </script>
 
