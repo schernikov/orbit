@@ -37,13 +37,13 @@ function Motion() {
 
         var deltaX = newX - lastMouseX;
         var newRotationMatrix = mat4.create();
-        mat4.identity(newRotationMatrix);
-        mat4.rotate(newRotationMatrix, degToRad(deltaX / 10), [0, 1, 0]);
+
+        mat4.rotateY(newRotationMatrix, newRotationMatrix, degToRad(deltaX / 10));
 
         var deltaY = newY - lastMouseY;
-        mat4.rotate(newRotationMatrix, degToRad(deltaY / 10), [1, 0, 0]);
+        mat4.rotateX(newRotationMatrix, newRotationMatrix, degToRad(deltaY / 10));
 
-        mat4.multiply(newRotationMatrix, moonRotationMatrix, moonRotationMatrix);
+        mat4.multiply(moonRotationMatrix, newRotationMatrix, moonRotationMatrix);
 
         lastMouseX = newX;
         lastMouseY = newY;

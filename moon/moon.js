@@ -48,7 +48,7 @@ function initShaders() {
     shaderProgram.daySamplerUniform = gl.getUniformLocation(shaderProgram, "uDaySampler");
     shaderProgram.nightSamplerUniform = gl.getUniformLocation(shaderProgram, "uNightSampler");
     shaderProgram.useLightingUniform = gl.getUniformLocation(shaderProgram, "uUseLighting");
-    shaderProgram.ambientColorUniform = gl.getUniformLocation(shaderProgram, "uAmbientColor");
+    shaderProgram.ambientLevelUniform = gl.getUniformLocation(shaderProgram, "uAmbientLevel");
     shaderProgram.lightingDirectionUniform = gl.getUniformLocation(shaderProgram, "uLightingDirection");
     shaderProgram.directionalColorUniform = gl.getUniformLocation(shaderProgram, "uDirectionalColor");
 }
@@ -90,9 +90,7 @@ var mvMatrixStack = [];
 var pMatrix = mat4.create();
 
 function mvPushMatrix() {
-    var copy = mat4.create();
-    mat4.set(mvMatrix, copy);
-    mvMatrixStack.push(copy);
+    mvMatrixStack.push(mat4.copy(mat4.create(), mvMatrix));
 }
 
 function mvPopMatrix() {
@@ -106,9 +104,7 @@ function setMatrixUniforms() {
     gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);
     gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, mvMatrix);
 
-    var normalMatrix = mat3.create();
-    mat4.toInverseMat3(mvMatrix, normalMatrix);
-    mat3.transpose(normalMatrix);
+    var normalMatrix = mat3.normalFromMat4(mat3.create(), mvMatrix);
     gl.uniformMatrix3fv(shaderProgram.nMatrixUniform, false, normalMatrix);
 }
 
@@ -140,7 +136,6 @@ function createEBuffer(array, count) {
 function initBuffers() {
     var latitudeBands = 30;
     var longitudeBands = 30;
-    var radius = 2;
 
     var vertexPositionData = [];
     var normalData = [];
@@ -163,7 +158,7 @@ function initBuffers() {
 
             normalData.push(x, y, z);
             textureCoordData.push(u, v);
-            vertexPositionData.push(radius * x, radius * y, radius * z);
+            vertexPositionData.push(x, y, z);
         }
     }
 
@@ -200,29 +195,29 @@ function drawScene() {
     gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, pMatrix);
+    mat4.perspective(pMatrix, 45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0);
 
     var lighting = document.getElementById("lighting").checked;
     gl.uniform1i(shaderProgram.useLightingUniform, lighting);
     if (lighting) {
-        var ambient = getUserValues('ambient', ['R', 'G', 'B']);
-        gl.uniform3fv(shaderProgram.ambientColorUniform, ambient);
+        gl.uniform1f(shaderProgram.ambientLevelUniform, ambient);
 
         var lightingDirection = getUserValues('lightDirection', ['X', 'Y', 'Z']);
-        var adjustedLD = vec3.create();
-        vec3.normalize(lightingDirection, adjustedLD);
-        vec3.scale(adjustedLD, -1);
+        var adjustedLD = vec3.normalize(vec3.create(), lightingDirection);
+        vec3.scale(adjustedLD, adjustedLD, -1);
         gl.uniform3fv(shaderProgram.lightingDirectionUniform, adjustedLD);
 
-        var directional = getUserValues('directional', ['R', 'G', 'B']);
-        gl.uniform3fv(shaderProgram.directionalColorUniform, directional);
+        gl.uniform3fv(shaderProgram.directionalColorUniform, sun_hue);
     }
 
     mat4.identity(mvMatrix);
 
-    mat4.translate(mvMatrix, [0, 0, -6]);
+    mat4.translate(mvMatrix, mvMatrix, [0, 0, -earth_rad*4]);
+    mat4.multiply(mvMatrix, mvMatrix, moonRotationMatrix);
+    var scl = mat4.create();
+    mat4.scale(scl, scl, [earth_rad, earth_rad, earth_rad]);
+    mat4.multiply(mvMatrix, mvMatrix, scl);
 
-    mat4.multiply(mvMatrix, moonRotationMatrix);
 
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, dayTexture);

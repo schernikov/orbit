@@ -4,9 +4,10 @@
     <title>Learning WebGL &mdash; lesson 11</title>
     <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
 
-    <script type="text/javascript" src="glMatrix-0.9.5.min.js"></script>
+    <script type="text/javascript" src="gl-matrix-min.js"></script>
     <script type="text/javascript" src="webgl-utils.js"></script>
     <script type="text/javascript" src="underscore-min.js"></script>
+    <script type="text/javascript" src="constant.js"></script>
     <script type="text/javascript" src="misc.js"></script>
     <script type="text/javascript" src="move.js"></script>
     <script type="text/javascript" src="moon.js"></script>
@@ -42,7 +43,7 @@
     uniform mat4 uPMatrix;
     uniform mat3 uNMatrix;
 
-    uniform vec3 uAmbientColor;
+    uniform float uAmbientLevel;
 
     uniform vec3 uLightingDirection;
     uniform vec3 uDirectionalColor;
@@ -65,7 +66,7 @@
             vec4 lDir = uMVMatrix * vec4(uLightingDirection, 0.0);
             vDirectionalLightWeighting = max(dot(transformedNormal, lDir.xyz), 0.0);
         }
-        vLightWeighting = uAmbientColor + uDirectionalColor * vDirectionalLightWeighting;
+        vLightWeighting = uDirectionalColor * (uAmbientLevel + vDirectionalLightWeighting);
     }
 </script>
 </head>
@@ -87,24 +88,6 @@ Spin the moon by dragging it with the mouse.
         <td>X: <input type="text" id="lightDirectionX" value="-1.0" />
         <td>Y: <input type="text" id="lightDirectionY" value="-1.0" />
         <td>Z: <input type="text" id="lightDirectionZ" value="-1.0" />
-    </tr>
-    <tr>
-        <td><b>Colour:</b>
-        <td>R: <input type="text" id="directionalR" value="0.8" />
-        <td>G: <input type="text" id="directionalG" value="0.8" />
-        <td>B: <input type="text" id="directionalB" value="0.8" />
-    </tr>
-</table>
-
-
-<h2>Ambient light:</h2>
-
-<table style="border: 0; padding: 10px;">
-    <tr>
-        <td><b>Colour:</b>
-        <td>R: <input type="text" id="ambientR" value="0.2" />
-        <td>G: <input type="text" id="ambientG" value="0.2" />
-        <td>B: <input type="text" id="ambientB" value="0.2" />
     </tr>
 </table>
 </body>
