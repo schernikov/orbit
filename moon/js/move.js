@@ -2,7 +2,7 @@
  * Created by schernikov on 11/15/14.
  */
 
-function Motion(onScene, onShift) {
+function Motion(onShift, onScene) {
     var self = this;
     var mouseDown = false;
     var lastMouseX = null;
@@ -39,7 +39,7 @@ function Motion(onScene, onShift) {
         var deltaX = newX - lastMouseX;
         var deltaY = newY - lastMouseY;
 
-        onShift(deltaX, deltaY);
+        onShift(deltaX, deltaY, event.shiftKey);
 
         lastMouseX = newX;
         lastMouseY = newY;

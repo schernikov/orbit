@@ -28,8 +28,6 @@ function initShaders(gl) {
         alert("Could not initialise shaders");
     }
 
-    gl.useProgram(shaderProgram);
-
     shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
     gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
 
@@ -64,7 +62,7 @@ function handleLoadedTexture(gl, texture) {
     gl.bindTexture(gl.TEXTURE_2D, null);
 }
 
-function initTexture(gl, motion, name) {
+function initTexture(gl, on_update, name) {
     var tex = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, tex);
     /* init with fake one-pixel texture to make it happy before main image is loaded */
@@ -72,7 +70,7 @@ function initTexture(gl, motion, name) {
     tex.image = new Image();
     tex.image.onload = function () {
         handleLoadedTexture(gl, tex);
-        motion.moveIt();
+        on_update();
     };
 
     tex.image.src = name;
@@ -96,23 +94,133 @@ function createEBuffer(gl, array, count) {
     return createBuffer(gl, gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(array), array.length, count);
 }
 
+function addPoint(points, point, p, mat) {
+    vec3.transformMat4(point, p, mat);
+    points.push(point[0], point[1], point[2]);
+}
+
+function generateTicks() {
+    var aspect = 0.6;  /* width to height ratio */
+    var longitudeBands = 72;
+    var step = Math.round(360/longitudeBands);
+    var tickWidth = Math.sin(degToRad(0.3*step)); // degrees for each 1 degree tick
+
+
+    var w = tickWidth/2;
+    var h = tickWidth/aspect/2;
+
+    var point = vec3.create();
+    var tickMat = mat4.create();
+
+    mat4.translate(tickMat, tickMat, [0, 0, 1]);
+
+    var positions = [];
+    var p1 = [-w, 0, -h];
+    var p2 = [-w, 0,  h];
+    var p3 = [ w, 0,  h];
+    var p4 = [ w, 0, -h];
+    _.each(_.range(longitudeBands), function (long) {
+        var finalMat = mat4.create();
+        mat4.rotateY(finalMat, finalMat, degToRad(long*step));
+        mat4.multiply(finalMat, finalMat, tickMat);
+        /* first triangle */
+        addPoint(positions, point, p1, finalMat);
+        addPoint(positions, point, p2, finalMat);
+        addPoint(positions, point, p3, finalMat);
+        /* second triangle */
+        addPoint(positions, point, p1, finalMat);
+        addPoint(positions, point, p3, finalMat);
+        addPoint(positions, point, p4, finalMat);
+    });
+    return positions;
+}
+
+function measShaders(gl) {
+    var fragmentShader = getShader(gl, "meas-fs");
+    var vertexShader = getShader(gl, "meas-vs");
+
+    var shaderProgram = gl.createProgram();
+    gl.attachShader(shaderProgram, vertexShader);
+    gl.attachShader(shaderProgram, fragmentShader);
+    gl.linkProgram(shaderProgram);
+
+    if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+        alert("Could not initialise shaders");
+    }
+
+    shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
+    gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
+
+    shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
+    shaderProgram.uColor = gl.getUniformLocation(shaderProgram, "uColor");
+
+    return shaderProgram;
+}
+
+function Measure(radius) {
+    var self = this;
+
+    var ticks = generateTicks();
+
+    var posBuf;
+
+    var movMat = mat4.create();
+    var worldMat = mat4.create();
+    var finalMat = mat4.create();
+
+    mat4.multiply(movMat, movMat, scaleMat(radius));
+
+    self.textures = function (gl) {
+        posBuf = createABuffer(gl, ticks, 3);
+    };
+
+    self.rotate = function (deltaX, deltaY) {
+
+    };
+
+    self.transform = function (camMap, world) {
+        mat4.multiply(worldMat, world, movMat);
+        mat4.multiply(finalMat, camMap, worldMat);
+    };
+
+    self.draw = function (gl, shader) {
+        gl.useProgram(shader);
+
+        vertexPointer(gl, shader.vertexPositionAttribute, posBuf);
+
+        gl.uniformMatrix4fv(shader.pMatrixUniform, false, finalMat);
+        gl.uniform4fv(shader.uColor, meas_color);
+
+        gl.drawArrays(gl.TRIANGLES, 0, posBuf.numItems);
+    };
+}
+
+function scaleMat(radius) {
+    var modMat = mat4.create();
+    mat4.scale(modMat, modMat, [radius, radius, radius]);
+    return modMat;
+}
+
 function Planet(radius) {
     var self = this;
 
     var sphere = createSphere();
-
+    var texs;
     var normalBuf, texBuf, posBuf, indexBuf;
 
     /* normals are the same as positions as long as sphere radius is 1 */
-    self.push_buffers = function (gl) {
+    self.textures = function (gl, names, unifs, on_update) {
         normalBuf = createABuffer(gl, sphere.positions, 3);
         texBuf = createABuffer(gl, sphere.texMap, 2);
         posBuf = createABuffer(gl, sphere.positions, 3);
         indexBuf = createEBuffer(gl, sphere.indices, 1);
+
+        texs = _.map(names, function (name, idx) {
+            return {texture : initTexture(gl, on_update, name), field: unifs[idx]};
+        });
     };
 
-    var modMat = mat4.create();
-    mat4.scale(modMat, modMat, [radius, radius, radius]);
+    var modMat = scaleMat(radius);
 
     var rotMat = mat4.create();
     var movMat = mat4.create();
@@ -139,15 +247,27 @@ function Planet(radius) {
         mat4.multiply(finalMat, camMap, worldMat);
     };
 
-    self.draw = function (gl, shader, dayTexture, nightTexture) {
-        gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_2D, dayTexture);
-        gl.uniform1i(shader.daySamplerUniform, 0);
+    self.draw = function (gl, shader) {
+        gl.useProgram(shader);
 
-        gl.activeTexture(gl.TEXTURE1);
-        gl.bindTexture(gl.TEXTURE_2D, nightTexture);
-        gl.uniform1i(shader.nightSamplerUniform, 1);
+        var lighting = document.getElementById("lighting").checked?1:0;
+        gl.uniform1i(shader.useLightingUniform, lighting);
+        if (lighting) {
+            gl.uniform1f(shader.ambientLevelUniform, ambient);
 
+            var lightingDirection = getUserValues('lightDirection', ['X', 'Y', 'Z']);
+            var adjustedLD = vec3.normalize(vec3.create(), lightingDirection);
+            vec3.scale(adjustedLD, adjustedLD, -1);
+            gl.uniform3fv(shader.lightingDirectionUniform, adjustedLD);
+
+            gl.uniform3fv(shader.directionalColorUniform, sun_hue);
+        }
+
+        _.each(texs, function (tex, idx) {
+            gl.activeTexture(gl['TEXTURE'+idx]);
+            gl.bindTexture(gl.TEXTURE_2D, tex.texture);
+            gl.uniform1i(tex.field, idx);
+        });
         vertexPointer(gl, shader.vertexPositionAttribute, posBuf);
         vertexPointer(gl, shader.textureCoordAttribute, texBuf);
         vertexPointer(gl, shader.vertexNormalAttribute, normalBuf);
@@ -173,58 +293,63 @@ function vertexPointer(gl, attr, buf) {
     gl.vertexAttribPointer(attr, buf.itemSize, gl.FLOAT, false, 0, 0);
 }
 
-function drawScene(gl, shaderProgram) {
+function drawScene(gl) {
     gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-    var lighting = document.getElementById("lighting").checked?1:0;
-    gl.uniform1i(shaderProgram.useLightingUniform, lighting);
-    if (lighting) {
-        gl.uniform1f(shaderProgram.ambientLevelUniform, ambient);
-
-        var lightingDirection = getUserValues('lightDirection', ['X', 'Y', 'Z']);
-        var adjustedLD = vec3.normalize(vec3.create(), lightingDirection);
-        vec3.scale(adjustedLD, adjustedLD, -1);
-        gl.uniform3fv(shaderProgram.lightingDirectionUniform, adjustedLD);
-
-        gl.uniform3fv(shaderProgram.directionalColorUniform, sun_hue);
-    }
 }
 
 function webGLStart() {
-    var dayTexture;
-    var nightTexture;
-
     var canvas = document.getElementById("canvas");
     var gl = initGL(canvas);
 
     var prog = initShaders(gl);
+    var m_prog = measShaders(gl);
 
     var earth = new Planet(earth_rad);
 
-    earth.push_buffers(gl);
+    var measure = new Measure(meas_rad);
 
     var perspectiveMat = mat4.create();
+    var cameraMat = mat4.create();
     var worldMat = mat4.create();
+    var observerMat = mat4.create();
     //TODO react on viewport dimentions changes
     mat4.perspective(perspectiveMat, 45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0);
 
-    mat4.translate(worldMat, worldMat, [0, 0, -4*earth_rad]);
+    mat4.translate(cameraMat, cameraMat, [0, 0, -4*earth_rad]);
 
-    earth.transform(perspectiveMat, worldMat);
+    mat4.multiply(observerMat, perspectiveMat, cameraMat);
 
-    var motion = new Motion(function () {
-        drawScene(gl, prog);
-        earth.draw(gl, prog, dayTexture, nightTexture);
-    }, function (dX, dY) {
-        //TODO rotate the world, not models
-        earth.rotate(dX, dY);
+    earth.transform(observerMat, worldMat);
+    measure.transform(observerMat, worldMat);
 
-        earth.transform(perspectiveMat, worldMat);
+    var motion = new Motion(function (dX, dY, lock) {
+        //earth.rotate(dX, dY);
+
+        var diffMat = mat4.create();
+        mat4.rotateY(diffMat, diffMat, degToRad(dX / 10));
+        mat4.rotateX(diffMat, diffMat, degToRad(dY / 10));
+
+        if (lock) {
+            mat4.rotateY(worldMat, worldMat, degToRad(dX / 10));
+            //mat4.multiply(worldMat, diffMat, worldMat);
+        } else {
+            mat4.multiply(worldMat, diffMat, worldMat);
+        }
+
+        earth.transform(observerMat, worldMat);
+        measure.transform(observerMat, worldMat);
+    }, function () {
+        drawScene(gl);
+
+        earth.draw(gl, prog);
+        measure.draw(gl, m_prog);
     });
 
-    dayTexture = initTexture(gl, motion, 'images/earth.jpg');
-    nightTexture = initTexture(gl, motion, 'images/night.jpg');
+    earth.textures(gl, ['images/earth.jpg', 'images/night.jpg'], [prog.daySamplerUniform, prog.nightSamplerUniform], function () {
+        motion.moveIt();
+    });
+    measure.textures(gl);
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.enable(gl.DEPTH_TEST);
