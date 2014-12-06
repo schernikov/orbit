@@ -1,7 +1,7 @@
 <html>
 
 <head>
-    <title>Learning WebGL &mdash; lesson 11</title>
+    <title>Celestial</title>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 
     <link rel="stylesheet" href="css/orbit.css"/>
@@ -13,9 +13,12 @@
     <script type="text/javascript" src="js/constant.js"></script>
     <script type="text/javascript" src="js/misc.js"></script>
     <script type="text/javascript" src="js/move.js"></script>
-    <script type="text/javascript" src="js/moon.js"></script>
+    <script type="text/javascript" src="js/planet.js"></script>
+    <script type="text/javascript" src="js/measure.js"></script>
+    <script type="text/javascript" src="js/sun.js"></script>
+    <script type="text/javascript" src="js/world.js"></script>
 
-    <script id="shader-fs" type="x-shader/x-fragment">
+<script id="shader-fs" type="x-shader/x-fragment">
     precision mediump float;
 
     varying vec2 vTextureCoord;
@@ -25,8 +28,8 @@
     uniform sampler2D uDaySampler;
     uniform sampler2D uNightSampler;
 
-    const float nightLevel = 0.1;     // at what light level night is fully in effect
-    const float dayLevel = 0.5;       // at what light level day is fully in effect
+    const float nightLevel = -0.2;     // at what light level night is fully in effect
+    const float dayLevel = 0.2;       // at what light level day is fully in effect
     const float ambientLevel = 0.3;   // how much day texture should affect night zones
 
     void main(void) {
@@ -35,14 +38,13 @@
         vec4 night = texture2D(uNightSampler, vec2(vTextureCoord.s, vTextureCoord.t));
         gl_FragColor = mix(night, day, clamp((vDirectionalLightWeighting-nightLevel)/(dayLevel-nightLevel), ambientLevel, 1.0));
     }
-    </script>
+</script>
 
-    <script id="shader-vs" type="x-shader/x-vertex">
+<script id="shader-vs" type="x-shader/x-vertex">
     attribute vec3 aVertexPosition;
     attribute vec3 aVertexNormal;
     attribute vec2 aTextureCoord;
 
-    uniform mat4 uMVMatrix;
     uniform mat4 uPMatrix;
     uniform mat3 uNMatrix;
 
@@ -50,8 +52,6 @@
 
     uniform vec3 uLightingDirection;
     uniform vec3 uDirectionalColor;
-
-    uniform bool uUseLighting;
 
     varying vec2 vTextureCoord;
     varying vec3 vLightWeighting;
@@ -61,14 +61,10 @@
         gl_Position = uPMatrix * vec4(aVertexPosition, 1.0);
         vTextureCoord = aTextureCoord;
 
-        vec3 transformedNormal = uNMatrix * aVertexNormal;
+        vec3 transformedNormal = normalize(uNMatrix * aVertexNormal);
 
-        if (!uUseLighting) {
-            vDirectionalLightWeighting = max(dot(transformedNormal, uLightingDirection), 0.0);
-        } else {
-            vec4 lDir = uMVMatrix * vec4(uLightingDirection, 0.0);
-            vDirectionalLightWeighting = max(dot(transformedNormal, lDir.xyz), 0.0);
-        }
+        vDirectionalLightWeighting = max(dot(transformedNormal, uLightingDirection), 0.0);
+
         vLightWeighting = uDirectionalColor * (uAmbientLevel + vDirectionalLightWeighting);
     }
 </script>
@@ -94,7 +90,29 @@
 	    vColor = uColor;
     }
 </script>
+<script id="sun-fs" type="x-shader/x-fragment">
+    precision mediump float;
 
+    varying vec2 vTextureCoord;
+
+    uniform sampler2D uSampler;
+
+    void main(void) {
+        gl_FragColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+    }
+</script>
+<script id="sun-vs" type="x-shader/x-vertex">
+    attribute vec3 aVertexPosition;
+    attribute vec2 aTextureCoord;
+
+    uniform mat4 uPMatrix;
+    varying vec2 vTextureCoord;
+
+    void main(void) {
+        gl_Position = uPMatrix * vec4(aVertexPosition, 1.0);
+        vTextureCoord = aTextureCoord;
+    }
+</script>
 
 </head>
 
@@ -102,22 +120,6 @@
 <body>
 <canvas id="canvas"></canvas>
 <div id="content">
-    <br/>
-
-    <input type="checkbox" id="lighting" checked /> Use lighting<br/>
-    Spin the moon by dragging it with the mouse.
-    <br/>
-
-    <h2>Directional light:</h2>
-
-    <table style="border: 0; padding: 10px;">
-        <tr>
-            <td><b>Direction:</b>
-            <td>X: <input type="text" id="lightDirectionX" value="-1.0" />
-            <td>Y: <input type="text" id="lightDirectionY" value="-1.0" />
-            <td>Z: <input type="text" id="lightDirectionZ" value="-1.0" />
-        </tr>
-    </table>
 </div>
 </body>
 

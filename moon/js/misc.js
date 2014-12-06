@@ -83,3 +83,41 @@ function createSphere() {
 
     return {positions: vertexPositionData, indices: indexData, texMap: textureCoordData};
 }
+
+function handleLoadedTexture(gl, texture) {
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texture.image);
+
+    gl.generateMipmap(gl.TEXTURE_2D);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+
+    gl.bindTexture(gl.TEXTURE_2D, null);
+}
+
+function initTexture(gl, on_update, name) {
+    var tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    /* init with fake one-pixel texture to make it happy before main image is loaded */
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255]));
+    tex.image = new Image();
+    tex.image.onload = function () {
+        handleLoadedTexture(gl, tex);
+        on_update();
+    };
+
+    tex.image.src = name;
+    return tex;
+}
+
+function scaleMat3(norm, sc) {
+    norm[0] *= sc;
+    norm[1] *= sc;
+    norm[2] *= sc;
+    norm[3] *= sc;
+    norm[4] *= sc;
+    norm[5] *= sc;
+    norm[6] *= sc;
+    norm[7] *= sc;
+    norm[8] *= sc;
+}
