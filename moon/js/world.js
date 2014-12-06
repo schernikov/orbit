@@ -59,7 +59,7 @@ function genObjects() {
     var measure = new Measure(angleTicksConf);
     var orbit = new Measure(orbTicksConf);
     var sun = new Sun('images/star.png');
-    return {list: [earth, measure, orbit, sun], sun: sun};
+    return {list: [earth, measure, orbit, sun], sun: sun, earth: earth, measure: measure};
 }
 
 function webGLStart() {
@@ -88,8 +88,6 @@ function webGLStart() {
     updateObjects(worldMat);
 
     var motion = new Motion(function (dX, dY, lock) {
-        //earth.rotate(dX, dY);
-
         var diffMat = mat4.create();
         mat4.rotateY(diffMat, diffMat, degToRad(dX / 10));
         mat4.rotateX(diffMat, diffMat, degToRad(dY / 10));
@@ -124,6 +122,15 @@ function webGLStart() {
     document.onmousemove = motion.handleMouseMove;
 
     motion.moveIt();
+
+    var speed = 0.3;
+    var angle = 0;
+    setInterval(function () {
+        angle += speed;
+        objects.earth.rotate(perspectiveMat, observerMat, angle);
+        objects.measure.rotate(perspectiveMat, observerMat, angle);
+        motion.moveIt();
+    }, 30);
 }
 
 $( document ).ready(webGLStart);

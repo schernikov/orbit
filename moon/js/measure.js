@@ -107,24 +107,28 @@ function Measure(conf) {
 
     var posBuf, shader;
 
+    var modMat = mat4.create();
     var movMat = mat4.create();
     var worldMat = mat4.create();
     var finalMat = mat4.create();
 
-    if (conf.offset) mat4.translate(movMat, movMat, [conf.offset, 0, 0]);
+    if (conf.offset) mat4.translate(modMat, modMat, [conf.offset, 0, 0]);
+    mat4.copy(movMat, modMat);
 
     self.textures = function (gl) {
         shader = measShaders(gl);
         posBuf = createABuffer(gl, ticks, 3);
     };
 
-    self.rotate = function (deltaX, deltaY) {
+    self.rotate = function (camMat, world, angle) {
+        mat4.rotateY(movMat, modMat, degToRad(angle));
 
+        self.transform(camMat, world);
     };
 
-    self.transform = function (camMap, world) {
+    self.transform = function (camMat, world) {
         mat4.multiply(worldMat, world, movMat);
-        mat4.multiply(finalMat, camMap, worldMat);
+        mat4.multiply(finalMat, camMat, worldMat);
     };
 
     self.draw = function (gl) {

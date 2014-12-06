@@ -59,7 +59,6 @@ function Planet(radius, names) {
 
     var modMat = scaleMat(radius);
 
-    var rotMat = mat4.create();
     var movMat = mat4.create();
     var normalMat = mat3.create();
     var worldMat = mat4.create();
@@ -67,29 +66,26 @@ function Planet(radius, names) {
     var lightingDirection = vec3.create();
     var correction = degToRad(90);
     mat4.rotateY(modMat, modMat, correction);
-    mat4.multiply(movMat, rotMat, modMat);
+    mat4.copy(movMat, modMat);
 
-    self.rotate = function (deltaX, deltaY) {
-        var diffMat = mat4.create();
-        mat4.rotateY(diffMat, diffMat, degToRad(deltaX / 10));
-        mat4.rotateX(diffMat, diffMat, degToRad(deltaY / 10));
-
-        mat4.multiply(rotMat, diffMat, rotMat);
-        //TODO if model is rotated only then rotMat is not needed.
-        // Need to have modMap only in case if there are other transforms
-        mat4.multiply(movMat, rotMat, modMat);
-    };
-
-    self.transform = function (camMap, world, objects) {
-        //vec3.transformMat4(lightingDirection, objects.sun.get_center(), rotMat);
-
-        vec3.transformMat4(lightingDirection, objects.sun.get_center(), world);
-        vec3.normalize(lightingDirection, lightingDirection);
-
+    function updateMatrices(camMat, world) {
         mat4.multiply(worldMat, world, movMat);
         mat3.normalFromMat4(normalMat, worldMat);
 
-        mat4.multiply(finalMat, camMap, worldMat);
+        mat4.multiply(finalMat, camMat, worldMat);
+    }
+
+    self.rotate = function (camMat, world, angle) {
+        mat4.rotateY(movMat, modMat, degToRad(angle));
+
+        updateMatrices(camMat, world);
+    };
+
+    self.transform = function (camMat, world, objects) {
+        vec3.transformMat4(lightingDirection, objects.sun.get_center(), world);
+        vec3.normalize(lightingDirection, lightingDirection);
+
+        updateMatrices(camMat, world);
     };
 
     self.draw = function (gl) {
