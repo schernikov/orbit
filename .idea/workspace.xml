@@ -1,28 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="2aff6570-cc48-43f5-abd5-e4ff3579536a" name="Default" comment="">
-      <change type="DELETED" beforePath="$PROJECT_DIR$/moon/css/orbit.css" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/moon/images/earth.jpg" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/moon/images/moon.jpg" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/moon/images/night.jpg" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/moon/images/star.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/moon/index.html" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/moon/js/constant.js" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/moon/js/libs/gl-matrix-min.js" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/moon/js/libs/glMatrix-0.9.5.min.js" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/moon/js/libs/jquery-2.1.1.min.js" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/moon/js/libs/jquery-2.1.1.min.map" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/moon/js/libs/underscore-min.js" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/moon/js/libs/underscore-min.map" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/moon/js/measure.js" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/moon/js/misc.js" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/moon/js/move.js" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/moon/js/planet.js" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/moon/js/sun.js" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/moon/js/webgl-utils.js" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/moon/js/world.js" afterPath="" />
-    </list>
+    <list default="true" id="2aff6570-cc48-43f5-abd5-e4ff3579536a" name="Default" comment="" />
     <ignored path="orbit.iws" />
     <ignored path=".idea/workspace.xml" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -41,6 +20,11 @@
   <component name="ExecutionTargetManager" SELECTED_TARGET="default_target" />
   <component name="FavoritesManager">
     <favorites_list name="orbit" />
+  </component>
+  <component name="FindManager">
+    <FindUsagesManager>
+      <setting name="OPEN_NEW_TAB" value="true" />
+    </FindUsagesManager>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -121,6 +105,47 @@
     <property name="WebServerToolWindowFactoryState" value="false" />
   </component>
   <component name="RunManager">
+    <configuration default="true" type="DartUnitRunConfigurationType" factoryName="DartUnit">
+      <option name="VMOptions" />
+      <option name="arguments" />
+      <option name="filePath" />
+      <option name="scope" value="ALL" />
+      <option name="testName" />
+      <method />
+    </configuration>
+    <configuration default="true" type="DartCommandLineRunConfigurationType" factoryName="Dart Command Line Application">
+      <option name="VMOptions" />
+      <option name="arguments" />
+      <option name="filePath" />
+      <option name="name" value="Dart" />
+      <option name="saveOutputToFile" value="false" />
+      <option name="showConsoleOnStdErr" value="false" />
+      <option name="showConsoleOnStdOut" value="false" />
+      <method />
+    </configuration>
+    <configuration default="true" type="CucumberJavaScriptRunConfigurationType" factoryName="Cucumber.js">
+      <option name="cucumberJsArguments" />
+      <option name="executablePath" />
+      <option name="filePath" />
+      <method />
+    </configuration>
+    <configuration default="true" type="JavaScriptTestRunnerKarma" factoryName="Karma" config-file="">
+      <envs />
+      <method />
+    </configuration>
+    <configuration default="true" type="JSTestDriver:ConfigurationType" factoryName="JsTestDriver">
+      <setting name="configLocationType" value="CONFIG_FILE" />
+      <setting name="settingsFile" value="" />
+      <setting name="serverType" value="INTERNAL" />
+      <setting name="preferredDebugBrowser" value="Chrome" />
+      <method />
+    </configuration>
+    <configuration default="true" type="JavascriptDebugType" factoryName="JavaScript Debug">
+      <method />
+    </configuration>
+    <configuration default="true" type="NodeJSConfigurationType" factoryName="Node.js" working-dir="">
+      <method />
+    </configuration>
     <list size="0" />
   </component>
   <component name="ShelveChangesManager" show_recycled="false" />
