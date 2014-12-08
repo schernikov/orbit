@@ -52,7 +52,7 @@ function Sun(name) {
 
     var points = makePoints();
 
-    var scale = 3;
+    var scale = 6;
     var sun_center = vec3.fromValues(earth_orb, 0, 0);
 
     self.get_center = function () {

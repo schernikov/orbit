@@ -68,6 +68,7 @@ function webGLStart() {
 
     var objects = genObjects();
 
+    var turnAngle = 0;
     var perspectiveMat = mat4.create();
     var cameraMat = mat4.create();
     var worldMat = mat4.create();
@@ -85,21 +86,27 @@ function webGLStart() {
         });
     }
 
+    function turnEarth(angle) {
+        objects.earth.rotate(perspectiveMat, observerMat, angle);
+        objects.measure.rotate(perspectiveMat, observerMat, angle);
+    }
+
     updateObjects(worldMat);
 
     var motion = new Motion(function (dX, dY, lock) {
-        var diffMat = mat4.create();
-        mat4.rotateY(diffMat, diffMat, degToRad(dX / 10));
-        mat4.rotateX(diffMat, diffMat, degToRad(dY / 10));
-
         if (lock) {
-            mat4.rotateY(worldMat, worldMat, degToRad(dX / 10));
-            //mat4.multiply(worldMat, diffMat, worldMat);
+            //mat4.rotateY(worldMat, worldMat, degToRad(dX / 10));
+            turnAngle += dX / 10;
+            turnEarth(turnAngle);
         } else {
-            mat4.multiply(worldMat, diffMat, worldMat);
-        }
+            var diffMat = mat4.create();
+            mat4.rotateY(diffMat, diffMat, degToRad(dX / 10));
+            mat4.rotateX(diffMat, diffMat, degToRad(dY / 10));
 
-        updateObjects(worldMat);
+            mat4.multiply(worldMat, diffMat, worldMat);
+
+            updateObjects(worldMat);
+        }
     }, function () {
         drawScene(gl);
 
@@ -123,14 +130,16 @@ function webGLStart() {
 
     motion.moveIt();
 
-    var speed = 0.3;
-    var angle = 0;
-    setInterval(function () {
-        angle += speed;
-        objects.earth.rotate(perspectiveMat, observerMat, angle);
-        objects.measure.rotate(perspectiveMat, observerMat, angle);
-        motion.moveIt();
-    }, 30);
+    function rotate(speed) {
+        var angle = 0;
+        setInterval(function () {
+            angle += speed;
+            turnEarth(angle);
+
+            motion.moveIt();
+        }, 30);
+    }
+    //rotate(0.3);
 }
 
 $( document ).ready(webGLStart);

@@ -1,3 +1,6 @@
 [submodule "webgl-lessons"]
 	path = webgl-lessons
 	url = ./webgl-lessons/
+[submodule "YASE"]
+	path = YASE
+	url = ./YASE
