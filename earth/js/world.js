@@ -12,6 +12,10 @@ function initGL(canvas) {
         gl.viewportHeight = canvas.height;
     } catch (e) {
     }
+
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.enable(gl.DEPTH_TEST);
+
     return gl;
 }
 
@@ -120,9 +124,6 @@ function webGLStart() {
     _.each(objects.list, function (obj) {
         obj.textures(gl, updater);
     });
-
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
-    gl.enable(gl.DEPTH_TEST);
 
     canvas.onmousedown = motion.handleMouseDown;
     document.onmouseup = motion.handleMouseUp;
